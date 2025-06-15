@@ -194,10 +194,12 @@ const startEdit = () => {
 
 const saveEdit = () => {
   if (!editedTitle.value.trim()) return;
-  emit("update-task", props.task.id, {
+  const updates = {
     title: editedTitle.value.trim(),
     description: editedDescription.value.trim(),
-  });
+    status: localStatus.value,
+  };
+  emit("update-task", props.task.id, updates);
   isEditing.value = false;
 };
 

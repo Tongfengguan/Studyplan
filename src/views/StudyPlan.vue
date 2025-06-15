@@ -272,10 +272,12 @@ const updateTaskStatus = (taskId, newStatus) => {
 const updateTask = (taskId, updates) => {
   const taskIndex = tasks.value.findIndex((t) => t.id === taskId);
   if (taskIndex !== -1) {
-    tasks.value[taskIndex] = {
+    const updatedTask = {
       ...tasks.value[taskIndex],
       ...updates,
+      id: taskId, // 确保ID保持不变
     };
+    tasks.value[taskIndex] = updatedTask;
     saveTasks();
   }
 };
