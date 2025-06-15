@@ -16,6 +16,11 @@ export default defineConfig(({ command }) => {
         "@": "/src",
       },
     },
+    server: {
+      port: 3000,
+      strictPort: true,
+      host: true,
+    },
     build: {
       outDir: "dist",
       assetsDir: "assets",
