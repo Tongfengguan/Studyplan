@@ -199,6 +199,7 @@ const saveEdit = () => {
     description: editedDescription.value.trim(),
     status: localStatus.value,
   };
+  console.log("TaskItem saveEdit:", props.task.id, updates);
   emit("update-task", props.task.id, updates);
   isEditing.value = false;
 };

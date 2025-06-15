@@ -277,7 +277,10 @@ const updateTask = (taskId, updates) => {
       ...updates,
       id: taskId, // 确保ID保持不变
     };
+    console.log("StudyPlan updateTask:", taskId, updates);
+    console.log("StudyPlan tasks before update:", tasks.value);
     tasks.value[taskIndex] = updatedTask;
+    console.log("StudyPlan tasks after update:", tasks.value);
     saveTasks();
   }
 };
