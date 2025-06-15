@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import TaskItem from "./TaskItem.vue";
 
 const props = defineProps({
@@ -94,4 +94,51 @@ const filteredTasks = computed(() => {
 const updateTaskStatus = (taskId, newStatus) => {
   emit("update-status", taskId, newStatus);
 };
+
+const editingTask = ref(null);
+const editInput = ref(null);
+
+const startEditing = (task) => {
+  editingTask.value = { ...task };
+  nextTick(() => {
+    editInput.value?.focus();
+  });
+};
+
+const saveEdit = () => {
+  if (editingTask.value) {
+    const index = props.tasks.findIndex((t) => t.id === editingTask.value.id);
+    if (index !== -1) {
+      const updatedTasks = [...props.tasks];
+      updatedTasks[index] = { ...editingTask.value };
+      emit("update-status", editingTask.value.id, updatedTasks[index].status);
+    }
+    editingTask.value = null;
+  }
+};
+
+const cancelEdit = () => {
+  editingTask.value = null;
+};
 </script>
+
+<style scoped>
+.edit-form {
+  flex: 1;
+  margin-left: 8px;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+</style>
