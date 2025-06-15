@@ -56,18 +56,26 @@
         v-for="(day, index) in calendarDays"
         :key="index"
         class="min-h-[100px] p-2 rounded-lg"
-        :class="{
-          'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400':
-            isToday(day),
-          'hover:bg-gray-50 dark:hover:bg-gray-700/50': !isToday(day),
-          'text-gray-400 dark:text-gray-500': !isCurrentMonth(day),
-        }"
+        :class="[
+          'relative p-2 h-24 overflow-hidden transition-colors duration-200',
+          isToday(day)
+            ? 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400'
+            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50',
+          isCurrentMonth(day) ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50',
+        ]"
       >
-        <div
-          class="text-sm font-medium mb-1"
-          :class="{ 'text-blue-600 dark:text-blue-400 font-bold': isToday(day) }"
-        >
-          {{ day.getDate() }}
+        <div class="flex justify-between items-start">
+          <span
+            :class="[
+              'text-sm',
+              isToday(day)
+                ? 'font-bold text-blue-600 dark:text-blue-300'
+                : 'text-gray-500 dark:text-gray-400',
+              !isCurrentMonth(day) && 'text-gray-400 dark:text-gray-500',
+            ]"
+          >
+            {{ day.getDate() }}
+          </span>
         </div>
         <div class="space-y-1">
           <div
