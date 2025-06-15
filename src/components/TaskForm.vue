@@ -136,7 +136,7 @@ onMounted(() => {
   fp = flatpickr(datePicker.value, {
     dateFormat: "Y/m/d",
     minDate: new Date().toISOString().split("T")[0],
-    locale: zh,
+    locale: zh || "zh",
     mode: "range",
     allowInput: true,
     enableTime: false,
