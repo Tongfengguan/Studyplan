@@ -60,70 +60,13 @@
             </button>
           </div>
         </div>
-        <div class="space-y-4">
-          <div
-            v-for="task in sortedTasks"
-            :key="task.id"
-            class="flex items-center justify-between p-4 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
-          >
-            <div class="flex items-center space-x-4">
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  :id="'task-' + task.id"
-                  v-model="task.status"
-                  true-value="completed"
-                  false-value="pending"
-                  class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  @change="saveTasks"
-                />
-              </div>
-              <div>
-                <h3
-                  class="text-lg font-medium"
-                  :class="{
-                    'text-gray-900 dark:text-white': task.status !== 'completed',
-                    'text-gray-500 dark:text-gray-400 line-through': task.status === 'completed',
-                  }"
-                >
-                  {{ task.title }}
-                </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                  截止日期：{{ formatDate(task.dueDate) }}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-4">
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="{
-                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200':
-                    task.priority === 'high',
-                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200':
-                    task.priority === 'medium',
-                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200':
-                    task.priority === 'low',
-                }"
-              >
-                {{ getPriorityText(task.priority) }}
-              </span>
-              <button
-                type="button"
-                @click.stop="confirmDelete(task)"
-                class="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+        <TaskList
+          :tasks="tasks"
+          @toggle-status="toggleTaskStatus"
+          @delete-task="confirmDelete"
+          @update-status="updateTaskStatus"
+          @update-task="updateTask"
+        />
       </div>
     </div>
 
@@ -178,6 +121,7 @@ import { ref, onMounted, computed } from "vue";
 import TaskForm from "../components/TaskForm.vue";
 import ThemeToggle from "../components/ThemeToggle.vue";
 import CalendarView from "../components/CalendarView.vue";
+import TaskList from "../components/TaskList.vue";
 
 const showTaskForm = ref(false);
 const showDeleteConfirm = ref(false);
@@ -185,12 +129,29 @@ const tasks = ref([]);
 const taskToDelete = ref(null);
 const isBatchDelete = ref(false);
 
+// 选中的任务
+const selectedTasks = ref([]);
+
+// 是否全选
+const isAllSelected = computed(() => {
+  return tasks.value.length > 0 && selectedTasks.value.length === tasks.value.length;
+});
+
+// 切换全选
+const toggleSelectAll = (event) => {
+  if (event.target.checked) {
+    selectedTasks.value = tasks.value.map((task) => task.id);
+  } else {
+    selectedTasks.value = [];
+  }
+};
+
 // 添加任务
 const addTask = (task) => {
   const newTask = {
     ...task,
     id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    status: "pending",
+    status: "not_started",
   };
   tasks.value.push(newTask);
   showTaskForm.value = false;
@@ -198,8 +159,8 @@ const addTask = (task) => {
 };
 
 // 确认删除
-const confirmDelete = (task) => {
-  taskToDelete.value = task;
+const confirmDelete = (taskId) => {
+  taskToDelete.value = taskId;
   isBatchDelete.value = false;
   showDeleteConfirm.value = true;
 };
@@ -214,34 +175,15 @@ const confirmBatchDelete = () => {
 const handleDeleteConfirm = () => {
   if (isBatchDelete.value) {
     // 批量删除选中的任务
-    tasks.value = tasks.value.filter((task) => !selectedTasks.value.includes(task));
+    tasks.value = tasks.value.filter((task) => !selectedTasks.value.includes(task.id));
   } else if (taskToDelete.value) {
     // 删除单个任务
-    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value.id);
+    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value);
   }
   saveTasks();
   showDeleteConfirm.value = false;
   taskToDelete.value = null;
   isBatchDelete.value = false;
-};
-
-// 选中的任务
-const selectedTasks = computed(() => {
-  return tasks.value.filter((task) => task.status === "completed");
-});
-
-// 是否全选
-const isAllSelected = computed(() => {
-  return tasks.value.length > 0 && tasks.value.every((task) => task.status === "completed");
-});
-
-// 切换全选
-const toggleSelectAll = (event) => {
-  const newStatus = event.target.checked ? "completed" : "pending";
-  tasks.value.forEach((task) => {
-    task.status = newStatus;
-  });
-  saveTasks();
 };
 
 // 保存任务到 localStorage
@@ -303,6 +245,40 @@ const sortedTasks = computed(() => {
     return a.id.localeCompare(b.id);
   });
 });
+
+// 切换任务状态
+const toggleTaskStatus = (taskId) => {
+  const task = tasks.value.find((t) => t.id === taskId);
+  if (task) {
+    task.status = task.status === "completed" ? "not_started" : "completed";
+    // 如果任务被标记为完成，从选中列表中移除
+    if (task.status === "completed") {
+      selectedTasks.value = selectedTasks.value.filter((id) => id !== taskId);
+    }
+    saveTasks();
+  }
+};
+
+// 更新任务状态
+const updateTaskStatus = (taskId, newStatus) => {
+  const task = tasks.value.find((t) => t.id === taskId);
+  if (task) {
+    task.status = newStatus;
+    saveTasks();
+  }
+};
+
+// 更新任务
+const updateTask = (taskId, updates) => {
+  const taskIndex = tasks.value.findIndex((t) => t.id === taskId);
+  if (taskIndex !== -1) {
+    tasks.value[taskIndex] = {
+      ...tasks.value[taskIndex],
+      ...updates,
+    };
+    saveTasks();
+  }
+};
 </script>
 
 <style>

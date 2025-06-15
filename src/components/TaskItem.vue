@@ -12,39 +12,76 @@
         />
         <div class="min-w-0 flex-1">
           <div class="flex items-center space-x-2">
-            <h3
-              :class="[
-                'text-sm font-medium truncate',
-                task.completed
-                  ? 'text-gray-400 dark:text-gray-500 line-through'
-                  : 'text-gray-900 dark:text-white',
-              ]"
-            >
-              {{ task.title }}
-            </h3>
-            <span
-              :class="[
-                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                {
-                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                    task.priority === 'high',
-                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
-                    task.priority === 'medium',
-                  'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                    task.priority === 'low',
-                },
-              ]"
-            >
-              {{
-                task.priority === "high"
-                  ? "高优先级"
-                  : task.priority === "medium"
-                  ? "中优先级"
-                  : "低优先级"
-              }}
-            </span>
+            <!-- 编辑模式 -->
+            <div v-if="isEditing" class="w-full">
+              <input
+                v-model="editedTitle"
+                type="text"
+                class="w-full px-2 py-1 text-sm border rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                @keyup.enter="saveEdit"
+                @keyup.esc="cancelEdit"
+                ref="titleInput"
+              />
+              <textarea
+                v-model="editedDescription"
+                class="mt-2 w-full px-2 py-1 text-sm border rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                rows="2"
+                placeholder="添加描述..."
+              ></textarea>
+              <div class="mt-2 flex space-x-2">
+                <button
+                  @click="saveEdit"
+                  class="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  保存
+                </button>
+                <button
+                  @click="cancelEdit"
+                  class="px-3 py-1 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+            <!-- 显示模式 -->
+            <template v-else>
+              <h3
+                @dblclick="startEdit"
+                :class="[
+                  'text-sm font-medium truncate cursor-pointer',
+                  task.completed
+                    ? 'text-gray-400 dark:text-gray-500 line-through'
+                    : 'text-gray-900 dark:text-white',
+                ]"
+              >
+                {{ task.title }}
+              </h3>
+              <span
+                :class="[
+                  'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                  {
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
+                      task.priority === 'high',
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
+                      task.priority === 'medium',
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                      task.priority === 'low',
+                  },
+                ]"
+              >
+                {{
+                  task.priority === "high"
+                    ? "高优先级"
+                    : task.priority === "medium"
+                    ? "中优先级"
+                    : "低优先级"
+                }}
+              </span>
+            </template>
           </div>
-          <p class="mt-1 text-sm text-gray-500 line-clamp-2">{{ task.description }}</p>
+          <p v-if="!isEditing" class="mt-1 text-sm text-gray-500 line-clamp-2">
+            {{ task.description }}
+          </p>
           <div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
             <div class="flex items-center space-x-1">
               <svg
@@ -124,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 
 const props = defineProps({
   task: {
@@ -133,13 +170,42 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["toggle-status", "delete-task", "update-status"]);
+const emit = defineEmits(["toggle-status", "delete-task", "update-status", "update-task"]);
 
 const localStatus = ref(props.task.status);
+const isEditing = ref(false);
+const editedTitle = ref("");
+const editedDescription = ref("");
+const titleInput = ref(null);
 
 onMounted(() => {
   localStatus.value = props.task.status;
 });
+
+const startEdit = () => {
+  if (props.task.completed) return;
+  isEditing.value = true;
+  editedTitle.value = props.task.title;
+  editedDescription.value = props.task.description;
+  nextTick(() => {
+    titleInput.value?.focus();
+  });
+};
+
+const saveEdit = () => {
+  if (!editedTitle.value.trim()) return;
+  emit("update-task", props.task.id, {
+    title: editedTitle.value.trim(),
+    description: editedDescription.value.trim(),
+  });
+  isEditing.value = false;
+};
+
+const cancelEdit = () => {
+  isEditing.value = false;
+  editedTitle.value = props.task.title;
+  editedDescription.value = props.task.description;
+};
 
 const updateStatus = () => {
   emit("update-status", props.task.id, localStatus.value);

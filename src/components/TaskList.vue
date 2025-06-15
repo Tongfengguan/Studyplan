@@ -49,6 +49,7 @@
         @toggle-status="$emit('toggle-status', task.id)"
         @delete-task="$emit('delete-task', task.id)"
         @update-status="updateTaskStatus"
+        @update-task="$emit('update-task', $event[0], $event[1])"
       />
     </div>
   </div>
@@ -65,7 +66,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["toggle-status", "delete-task", "update-status"]);
+const emit = defineEmits(["toggle-status", "delete-task", "update-status", "update-task"]);
 
 // 状态筛选
 const selectedStatus = ref("all");
@@ -79,11 +80,11 @@ const filteredTasks = computed(() => {
   return props.tasks.filter((task) => {
     switch (selectedStatus.value) {
       case "not_started":
-        return !task.completed && task.status === "not_started";
+        return task.status === "not_started";
       case "in_progress":
-        return !task.completed && task.status === "in_progress";
+        return task.status === "in_progress";
       case "completed":
-        return task.completed;
+        return task.status === "completed";
       default:
         return true;
     }
