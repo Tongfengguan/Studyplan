@@ -57,12 +57,18 @@
         :key="index"
         class="min-h-[100px] p-2 rounded-lg"
         :class="{
-          'bg-gray-50 dark:bg-gray-700/50': isToday(day),
+          'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400':
+            isToday(day),
           'hover:bg-gray-50 dark:hover:bg-gray-700/50': !isToday(day),
           'text-gray-400 dark:text-gray-500': !isCurrentMonth(day),
         }"
       >
-        <div class="text-sm font-medium mb-1">{{ day.getDate() }}</div>
+        <div
+          class="text-sm font-medium mb-1"
+          :class="{ 'text-blue-600 dark:text-blue-400 font-bold': isToday(day) }"
+        >
+          {{ day.getDate() }}
+        </div>
         <div class="space-y-1">
           <div
             v-for="task in getTasksForDay(day)"
