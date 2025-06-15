@@ -6,8 +6,10 @@ import vue from "@vitejs/plugin-vue";
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
   const isProduction = command === "build";
+  const base = isProduction ? "/Studyplan/" : "/";
+
   return {
-    base: isProduction ? "/Studyplan/" : "/",
+    base,
     plugins: [vue()],
     resolve: {
       alias: {
@@ -20,7 +22,12 @@ export default defineConfig(({ command }) => {
       emptyOutDir: true,
       rollupOptions: {
         output: {
-          assetFileNames: "assets/[name]-[hash][extname]",
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name === "favicon.ico") {
+              return "favicon.ico";
+            }
+            return "assets/[name]-[hash][extname]";
+          },
           chunkFileNames: "assets/[name]-[hash].js",
           entryFileNames: "assets/[name]-[hash].js",
         },
