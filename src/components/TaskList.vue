@@ -49,7 +49,7 @@
         @toggle-status="$emit('toggle-status', task.id)"
         @delete-task="$emit('delete-task', task.id)"
         @update-status="updateTaskStatus"
-        @update-task="$emit('update-task', $event[0], $event[1])"
+        @update-task="(taskId, updates) => $emit('update-task', taskId, updates)"
       />
     </div>
   </div>
